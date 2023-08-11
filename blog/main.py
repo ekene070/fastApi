@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Depends, status, Response, HTTPException
-from . import schemas, model # I use . because its in same directoryc
+from typing import List
+from . import schemas, model, hashing # I use . because its in same directoryc
 from .database import engine, SessionLocal
 from sqlalchemy.orm import Session
+
 
 app = FastAPI()
 
@@ -15,7 +17,7 @@ def get_db():
         db.close()
 
 
-@app.post("/blog", status_code=status.HTTP_201_CREATED)
+@app.post("/blog", status_code=status.HTTP_201_CREATED, tags=["blog"])
 def create(request:schemas.Blog, db: Session = Depends(get_db)):
     new_blog = model.Blog(title = request.title, body= request.body)
     db.add(new_blog)
@@ -23,7 +25,7 @@ def create(request:schemas.Blog, db: Session = Depends(get_db)):
     db.refresh(new_blog)
     return new_blog
 
-@app.delete("/blog/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/blog/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["blog"])
 def destroy(id, db: Session = Depends(get_db)):
     blog_to_delete = db.query(model.Blog).filter(model.Blog.id == id).delete(synchronize_session=False)
     if not blog_to_delete:
@@ -31,7 +33,7 @@ def destroy(id, db: Session = Depends(get_db)):
     db.commit()
     return {f"Blog with id: {id} deleted successfully"}
 
-@app.put("/blog/{id}", status_code=status.HTTP_202_ACCEPTED)
+@app.put("/blog/{id}", status_code=status.HTTP_202_ACCEPTED, tags=["blog"])
 def update(id, request: schemas.Blog, db: Session = Depends(get_db)):
     # Create a dictionary of column-value pairs for the updates
     update_data = {
@@ -48,12 +50,12 @@ def update(id, request: schemas.Blog, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Blog updated successfully"}
 
-@app.get("/blog")
+@app.get("/blog", response_model=List[schemas.showBlog], tags=["blog"])
 def get_all_blogs(db: Session = Depends(get_db)):
     blogs = db.query(model.Blog).all()
     return blogs
 
-@app.get("/blog/{id}", status_code=200)
+@app.get("/blog/{id}", status_code=200, response_model=schemas.showBlog, tags=["blog"]) # We use response_model to get the particular info we need from the pydantic model/schema
 def show(id, response:Response, db: Session = Depends(get_db)):
     blog = db.query(model.Blog).filter(model.Blog.id == id).first()
     if not blog:
@@ -61,3 +63,22 @@ def show(id, response:Response, db: Session = Depends(get_db)):
         # response.status_code = status.HTTP_400_BAD_REQUEST
         # return {"detail": f"Blog with id {id} not found"}
     return blog
+
+#Create user profile
+@app.post("/user",  response_model=schemas.ShowUser, status_code=status.HTTP_201_CREATED, tags=["users"])
+def create_user(request:schemas.User, db: Session = Depends(get_db)):
+    print(request, "before create user")
+
+    new_user = model.User(name = request.name, email = request.email, password = hashing.Hash.encrypt_password(request.password))
+    print(new_user, "before create user")
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@app.get("/user/{id}", response_model=schemas.ShowUser, tags=["users"])
+def get_user(id: int, db: Session = Depends(get_db)):
+    users = db.query(model.User).filter(model.User.id == id).first()
+    if not users:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {id} not found")
+    return users
