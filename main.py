@@ -15,7 +15,7 @@ def index():
 
 #In fastapi, we can use strict typing pattern as in typescript
 @app.get("/blog")
-def blog(limit=10, published: bool=True, sort:Optional[str] = None): # This is how we accept query parameter in fastapi
+def blog(limit=10, published: bool=True, sort:Optional[str] = None): # This is how we accept query parameter(?) in fastapi
     # Only get 10 published blogs
     if published:
         return {"data": f'{limit} published blogs from db'}
