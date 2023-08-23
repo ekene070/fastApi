@@ -16,7 +16,8 @@ class User(BaseModel):
 class ShowUser(BaseModel):
     name: str
     email: str
-    blogs: List #with default as empty list
+    blogs: List[Blog] = [] #with default as empty list
+
     class Config(): # We use this because when we try to show this showBlog class, we need to have orm configured and also for serialization and deserialization
       from_attributes = True
 
