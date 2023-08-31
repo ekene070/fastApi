@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from .. import schemas, model, hashing, database # I use . because its in same directoryc
 from ..repository import blog
+from ..oauth2 import get_current_user
 
 
 router = APIRouter(
@@ -12,13 +13,13 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.showBlog]) #We use List[schemas.showBlog] because we want a list and not just a single item,
-def get_all_blogs(db: Session = Depends(database.get_db)):
+def get_all_blogs(db: Session = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
     # blogs = db.query(model.Blog).all()
     # return blogs
     return blog.get_all(db)
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create(request:schemas.Blog, db: Session = Depends(database.get_db)):
+def create(request:schemas.Blog, db: Session = Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
     # new_blog = model.Blog(title = request.title, body= request.body, creator_id = 1)
     # db.add(new_blog)
     # db.commit()

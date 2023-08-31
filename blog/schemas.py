@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class Blog(BaseModel): # We need this cos we are trying to do a pydantic which is a sort of strict validation just like typescript does
@@ -27,3 +27,15 @@ class showBlog(BaseModel): #This will only show the exact body we need
     creator: ShowUser
     class Config(): # We use this because when we try to show this showBlog class, we need to have orm configured
         from_attributes = True
+
+class Login(BaseModel):
+   username: str
+   password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: Optional[str] = None # I could have str | None = None which is same but I would need to import from typing

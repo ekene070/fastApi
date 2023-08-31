@@ -3,7 +3,7 @@ from typing import List
 from . import schemas, model, hashing, database # I use . because its in same directoryc
 from .database import engine # SessionLocal
 from sqlalchemy.orm import Session
-from .routers import blog, user
+from .routers import blog, user, authentication
 
 
 app = FastAPI()
@@ -12,6 +12,7 @@ model.Base.metadata.create_all(bind=engine) # This means anytime you find any mo
 
 app.include_router(blog.router)
 app.include_router(user.router)
+app.include_router(authentication.router)
 
 # def get_db():
 #     db = SessionLocal()
